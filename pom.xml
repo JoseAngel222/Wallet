@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>es.jose</groupId>
-    <artifactId>BizumJose</artifactId>
+    <artifactId>Wallet</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>BizumJose</name>
-    <description>BizumJose</description>
+    <name>Wallet</name>
+    <description>Wallet</description>
     <url/>
     <licenses>
         <license/>

@@ -5,26 +5,25 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.math.BigDecimal;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "contacts")
-public class Contact {
+@Table(name = "wallets")
+public class Wallet {
+
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "owner_id")
-    private User owner;
+    @OneToOne(optional = false)
+    private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "contact_user_id")
-    private User contactUser;
+    @Column(nullable = false)
+    private BigDecimal balance;
 
-    private String alias;
+    @Column(nullable = false)
+    private String currency; // EUR
 }
-
-

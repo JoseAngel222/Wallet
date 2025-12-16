@@ -5,9 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
-import java.util.List;
+import java.util.Set;
 
 @Data
 @Builder
@@ -16,29 +14,25 @@ import java.util.List;
 @Entity
 @Table(name = "users")
 public class User {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
-
-    @Column(unique = true)
-    private String phoneNumber;
-
-    @Column(unique = true)
+    @Column(nullable = false, unique = true)
     private String email;
 
+    @Column(nullable = false)
     private String password;
 
-    private BigDecimal balance;
+    private String fullName;
 
-    @OneToMany(mappedBy = "sender")
-    private List<Transaction> sentTransactions;
-
-    @OneToMany(mappedBy = "receiver")
-    private List<Transaction> receivedTransactions;
-
-    @OneToMany(mappedBy = "owner")
-    private List<Contact> contacts;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id")
+    )
+    @Column(name = "role")
+    private Set<String> roles;
 }
-
 

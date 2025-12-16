@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.math.BigDecimal;
+
 import java.time.LocalDateTime;
 
 @Data
@@ -13,30 +13,17 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "transactions")
-public class Transaction {
+@Table(name = "ai_recommendations")
+public class AIRecommendation {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(optional = false)
-    private Wallet fromWallet;
+    private User user;
 
-    @ManyToOne(optional = false)
-    private Wallet toWallet;
-
-    @Column(nullable = false)
-    private BigDecimal amount;
-
-    @Enumerated(EnumType.STRING)
-    private TransactionType type;
-
-    @Enumerated(EnumType.STRING)
-    private TransactionStatus status;
-
-    private String description;
+    @Column(length = 2000)
+    private String message;
 
     private LocalDateTime createdAt;
 }
-
-
