@@ -27,6 +27,9 @@ public class User {
 
     private String fullName;
 
+    @Column(unique = true, nullable = false)
+    private String phoneNumber;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = "user_roles",

@@ -1,32 +1,38 @@
 package es.jose.bizumjose.Exception;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 
-@RestControllerAdvice
+import java.time.Instant;
+import java.util.Map;
+
+@ControllerAdvice
 public class ApiExceptionHandler {
 
-    @ExceptionHandler(NotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleNotFound(NotFoundException ex) {
-        return new ErrorResponse("NOT_FOUND", ex.getMessage(), null);
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<?> notFound(ResourceNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                "timestamp", Instant.now(),
+                "message", ex.getMessage()
+        ));
     }
 
-    @ExceptionHandler(UnauthorizedException.class)
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public ErrorResponse handleUnauthorized(UnauthorizedException ex) {
-        return new ErrorResponse("UNAUTHORIZED", ex.getMessage(), null);
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<?> badRequest(BadRequestException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                "timestamp", Instant.now(),
+                "message", ex.getMessage()
+        ));
     }
 
-    @ExceptionHandler(BusinessException.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse handleBusiness(BusinessException ex) {
-        return new ErrorResponse("BUSINESS_ERROR", ex.getMessage(), null);
-    }
-
-    @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleBadRequest(RuntimeException ex) {
-        return new ErrorResponse("BAD_REQUEST", ex.getMessage(), null);
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<?> general(Exception ex) {
+        ex.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                "timestamp", Instant.now(),
+                "message", ex.getMessage()
+        ));
     }
 }
