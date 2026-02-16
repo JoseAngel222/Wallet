@@ -11,7 +11,7 @@ import es.jose.bizumjose.Exception.ResourceNotFoundException;
 import es.jose.bizumjose.Repository.TransactionRepository;
 import es.jose.bizumjose.Repository.WalletRepository;
 import es.jose.bizumjose.Service.TransactionService;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +26,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     private final WalletRepository walletRepository;
     private final TransactionRepository transactionRepository;
+    private final AIRecommendationServiceImpl aiRecommendationService;
 
     private static final BigDecimal DAILY_LIMIT = new BigDecimal("500");
     private static final BigDecimal MONTHLY_LIMIT = new BigDecimal("3000");
@@ -51,45 +52,41 @@ public class TransactionServiceImpl implements TransactionService {
 
 
     @Override
+    @Transactional(noRollbackFor = BadRequestException.class)
     public TransactionDto transfer(Long fromUserId, TransferRequestDto dto) {
-
         if (fromUserId.equals(dto.getToUserId())) {
             throw new BadRequestException("Cannot transfer to yourself");
         }
+        // ✅ Llamada a límites
+        checkLimits(fromUserId, dto.getAmount());
 
         Wallet from = walletRepository.findByUserIdForUpdate(fromUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Source wallet not found"));
-
         Wallet to = walletRepository.findByUserIdForUpdate(dto.getToUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Target wallet not found"));
 
         Transaction tx = Transaction.builder()
-                .fromWallet(from)
-                .toWallet(to)
-                .amount(dto.getAmount())
-                .type(TransactionType.TRANSFER)
-                .status(TransactionStatus.PENDING)
-                .description(dto.getDescription())
-                .createdAt(LocalDateTime.now())
+                .fromWallet(from).toWallet(to).amount(dto.getAmount())
+                .type(TransactionType.TRANSFER).status(TransactionStatus.PENDING)
+                .description(dto.getDescription()).createdAt(LocalDateTime.now())
                 .build();
-
         transactionRepository.save(tx);
 
         try {
             if (from.getBalance().compareTo(dto.getAmount()) < 0) {
                 throw new BadRequestException("Insufficient balance");
             }
-
             from.setBalance(from.getBalance().subtract(dto.getAmount()));
             to.setBalance(to.getBalance().add(dto.getAmount()));
-
             tx.setStatus(TransactionStatus.COMPLETED);
-
         } catch (RuntimeException ex) {
             tx.setStatus(TransactionStatus.FAILED);
             throw ex;
         }
-
+        if (tx.getStatus() == TransactionStatus.COMPLETED) {
+            // Llamada asíncrona para generar recomendación
+            aiRecommendationService.generateAndSaveRecommendation(fromUserId);
+        }
         return TransactionDto.from(tx);
     }
 

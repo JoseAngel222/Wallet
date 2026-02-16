@@ -15,11 +15,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class TransactionServiceTest {
@@ -49,11 +52,13 @@ class TransactionServiceTest {
         when(walletRepository.findByUserIdForUpdate(1L)).thenReturn(Optional.of(from));
         when(walletRepository.findByUserIdForUpdate(2L)).thenReturn(Optional.of(to));
 
-        TransferRequestDto dto = new TransferRequestDto(
-                2L, BigDecimal.valueOf(30), "test"
-        );
 
+        when(transactionRepository.sumTransferredSince(eq(1L), any(LocalDateTime.class)))
+                .thenReturn(BigDecimal.ZERO);
+
+        TransferRequestDto dto = new TransferRequestDto(2L, BigDecimal.valueOf(30), "test");
         TransactionDto result = service.transfer(1L, dto);
+
 
         assertEquals(BigDecimal.valueOf(70), from.getBalance());
         assertEquals(BigDecimal.valueOf(80), to.getBalance());
@@ -64,31 +69,18 @@ class TransactionServiceTest {
 
     @Test
     void transfer_insufficient_balance() {
-        Wallet from = Wallet.builder()
-                .id(1L)
-                .balance(BigDecimal.valueOf(10))
-                .currency("EUR")
-                .build();
+        Wallet from = Wallet.builder().id(1L).balance(BigDecimal.valueOf(10)).currency("EUR").build();
+        Wallet to = Wallet.builder().id(2L).balance(BigDecimal.ZERO).currency("EUR").build();
 
-        Wallet to = Wallet.builder()
-                .id(2L)
-                .balance(BigDecimal.ZERO)
-                .currency("EUR")
-                .build();
+        when(walletRepository.findByUserIdForUpdate(1L)).thenReturn(Optional.of(from));
+        when(walletRepository.findByUserIdForUpdate(2L)).thenReturn(Optional.of(to));
 
-        when(walletRepository.findByUserIdForUpdate(1L))
-                .thenReturn(Optional.of(from));
-        when(walletRepository.findByUserIdForUpdate(2L))
-                .thenReturn(Optional.of(to));
+        // ✅ También aquí simulamos los límites
+        when(transactionRepository.sumTransferredSince(eq(1L), any(LocalDateTime.class)))
+                .thenReturn(BigDecimal.ZERO);
 
-        TransferRequestDto dto = new TransferRequestDto(
-                2L, BigDecimal.valueOf(50), "fail"
-        );
-
-        assertThrows(
-                BadRequestException.class,
-                () -> service.transfer(1L, dto)
-        );
+        TransferRequestDto dto = new TransferRequestDto(2L, BigDecimal.valueOf(50), "fail");
+        assertThrows(BadRequestException.class, () -> service.transfer(1L, dto));
     }
 
 

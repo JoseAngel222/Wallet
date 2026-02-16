@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class JwtServiceTest {
 
     JwtService jwtService =
-            new JwtService("alfinalLasCosasSiempreFuncionan555623232EEE", 1000);
+            new JwtService("YWZpbmFsTGFzQ29zYXNTaWVtcHJlRnVuY2lvbmFuNTU1NjIzMjMyRUVF", 1000);
 
     @Test
     void generate_and_validate_token() {

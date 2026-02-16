@@ -3,11 +3,13 @@ package es.jose.bizumjose.Repository;
 import es.jose.bizumjose.Entity.Transaction;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 
     List<Transaction> findByFromWalletIdOrToWalletId(
@@ -22,4 +24,5 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
       AND t.createdAt >= :since
 """)
     BigDecimal sumTransferredSince(Long userId, LocalDateTime since);
+    List<Transaction> findByFromWalletUserIdAndCreatedAtAfter(Long userId, LocalDateTime since);
 }

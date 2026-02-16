@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -39,14 +40,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         Long userId = jwtService.extractUserId(token);
-        UserDetailsImpl userDetails = userDetailsService.loadUserById(userId);
+        UserDetailsImpl userDetails;
+        try {
+            userDetails = userDetailsService.loadUserById(userId);
+        } catch (UsernameNotFoundException e) {
+            res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
+            return;
+        }
 
         UsernamePasswordAuthenticationToken auth =
-                new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities()
-                );
+                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));
 
         SecurityContextHolder.getContext().setAuthentication(auth);
         chain.doFilter(req, res);
-    }
-}
+    }}
+

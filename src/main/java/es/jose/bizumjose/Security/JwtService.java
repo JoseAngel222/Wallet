@@ -2,7 +2,9 @@ package es.jose.bizumjose.Security;
 
 import es.jose.bizumjose.Entity.User;
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -11,7 +13,6 @@ import java.util.Date;
 
 @Service
 public class JwtService {
-
     private final Key key;
     private final long expirationMs;
 
@@ -19,12 +20,14 @@ public class JwtService {
             @Value("${app.jwt.secret}") String secret,
             @Value("${app.jwt.expiration-ms}") long expirationMs
     ) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes());
+        byte[] keyBytes = Decoders.BASE64.decode(secret);
+        this.key = Keys.hmacShaKeyFor(keyBytes);
         this.expirationMs = expirationMs;
     }
 
     public String generateToken(User user) {
         Date now = new Date();
+
         return Jwts.builder()
                 .setSubject(String.valueOf(user.getId()))
                 .claim("email", user.getEmail())

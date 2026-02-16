@@ -1,6 +1,7 @@
 package es.jose.bizumjose.Service.Impl;
 
 import es.jose.bizumjose.Entity.User;
+import es.jose.bizumjose.Exception.ResourceNotFoundException;
 import es.jose.bizumjose.Repository.UserRepository;
 import es.jose.bizumjose.Service.UserService;
 import es.jose.bizumjose.Exception.BadRequestException;
@@ -39,7 +40,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User findByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
     @Override
